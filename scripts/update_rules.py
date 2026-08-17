@@ -18,7 +18,7 @@ UPSTREAM_BASE = "https://github.com/Loyalsoldier/clash-rules/releases/latest/dow
 # These are the categories used by the maintained Mini template.  The source
 # files are provider YAML payloads; the generated files are classic Clash list
 # rules so SubConverter's ruleset= syntax can consume them.
-ASSETS = {
+FULL_ASSETS = {
     "private": ("private.txt", "domain"),
     "reject": ("reject.txt", "domain"),
     "applications": ("applications.txt", "classic"),
@@ -29,6 +29,24 @@ ASSETS = {
     "lancidr": ("lancidr.txt", "cidr"),
     "cncidr": ("cncidr.txt", "cidr"),
     "telegramcidr": ("telegramcidr.txt", "cidr"),
+}
+
+# Lite intentionally omits the very large reject, direct, and proxy domain
+# payloads.  FINAL is routed to DIRECT in the Lite INI, so these focused proxy
+# categories act as a blacklist-style supplement instead of a full split list.
+LITE_ASSETS = {
+    "private": ("private.txt", "domain"),
+    "applications": ("applications.txt", "classic"),
+    "gfw": ("gfw.txt", "domain"),
+    "tld-not-cn": ("tld-not-cn.txt", "domain"),
+    "lancidr": ("lancidr.txt", "cidr"),
+    "cncidr": ("cncidr.txt", "cidr"),
+    "telegramcidr": ("telegramcidr.txt", "cidr"),
+}
+
+PROFILES = {
+    "generated": FULL_ASSETS,
+    "generated/lite": LITE_ASSETS,
 }
 
 VALID_PREFIXES = (
@@ -175,18 +193,21 @@ def validate_file(path: Path) -> int:
 def main() -> int:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     changed = 0
-    for output_name, (asset, kind) in ASSETS.items():
-        data = fetch(f"{UPSTREAM_BASE}/{asset}")
-        rules = convert_entries(parse_payload(data), kind)
-        path = OUTPUT_DIR / f"{output_name}.list"
-        content = render(asset, rules)
-        old = path.read_text(encoding="utf-8") if path.exists() else None
-        if old != content:
-            path.write_text(content, encoding="utf-8")
-            changed += 1
-        print(f"{path.relative_to(ROOT)}: {len(rules)} rules")
+    for output_relative, assets in PROFILES.items():
+        profile_dir = ROOT / output_relative
+        profile_dir.mkdir(parents=True, exist_ok=True)
+        for output_name, (asset, kind) in assets.items():
+            data = fetch(f"{UPSTREAM_BASE}/{asset}")
+            rules = convert_entries(parse_payload(data), kind)
+            path = profile_dir / f"{output_name}.list"
+            content = render(asset, rules)
+            old = path.read_text(encoding="utf-8") if path.exists() else None
+            if old != content:
+                path.write_text(content, encoding="utf-8")
+                changed += 1
+            print(f"{path.relative_to(ROOT)}: {len(rules)} rules")
 
-    for path in sorted(OUTPUT_DIR.glob("*.list")):
+    for path in sorted(OUTPUT_DIR.rglob("*.list")):
         validate_file(path)
     print(f"changed_files={changed}")
     return 0

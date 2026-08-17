@@ -19,6 +19,14 @@ https://raw.githubusercontent.com/NOWYQS/ACL4SSR_Online_Mini_Maintained/main/ACL
 
 Use this URL as the remote `config=` value in a compatible SubConverter endpoint.
 
+## Lite profile URL
+
+```text
+https://raw.githubusercontent.com/NOWYQS/ACL4SSR_Online_Mini_Maintained/main/ACL4SSR_Online_Mini_Lite_Maintained.ini
+```
+
+The Lite profile keeps only focused LAN/China-IP/GFW/non-China-TLD/Telegram rules. It deliberately omits the large `reject.txt`, `direct.txt`, and `proxy.txt` payloads. It also disables full ad blocking and routes unmatched traffic to `DIRECT` by default.
+
 ## Generated rule sources
 
 | Generated file | Upstream source | Policy |
@@ -33,6 +41,8 @@ Use this URL as the remote `config=` value in a compatible SubConverter endpoint
 | `gfw.list` | `gfw.txt` | Proxy |
 | `tld-not-cn.list` | `tld-not-cn.txt` | Proxy |
 | `telegramcidr.list` | `telegramcidr.txt` | Proxy |
+
+The full profile reads these files from `generated/`. The Lite profile reads its focused subset from `generated/lite/`.
 
 ## Why GitHub Actions is used
 
